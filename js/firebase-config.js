@@ -1,12 +1,20 @@
-// Add your Firebase configuration here
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAlBqJmi7n0NUeElLEBk6-T7CUNmY5LGGo",
+    authDomain: "e-gram-ecbf2.firebaseapp.com",
+    projectId: "e-gram-ecbf2",
+    storageBucket: "e-gram-ecbf2.firebasestorage.app",
+    messagingSenderId: "690210783350",
+    appId: "1:690210783350:web:1f71efde7f424b5ed89f57",
+    measurementId: "G-T57GX1340Z"
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+export { auth, db };

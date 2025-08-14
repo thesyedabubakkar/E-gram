@@ -1,13 +1,14 @@
-// Main JavaScript file
+import { auth, db } from './firebase-config.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-firebase.auth().onAuthStateChanged((user) => {
+onAuthStateChanged(auth, (user) => {
     if (user) {
         // User is signed in.
-        const db = firebase.firestore();
-        const userRef = db.collection('users').doc(user.uid);
-        userRef.get().then((doc) => {
-            if (doc.exists) {
-                const userRole = doc.data().role;
+        const userRef = doc(db, 'users', user.uid);
+        getDoc(userRef).then((docSnap) => {
+            if (docSnap.exists()) {
+                const userRole = docSnap.data().role;
                 if (userRole === 'admin') {
                     window.location.href = 'admin.html';
                 } else if (userRole === 'staff') {
@@ -16,7 +17,6 @@ firebase.auth().onAuthStateChanged((user) => {
                     window.location.href = 'user.html';
                 }
             } else {
-                // doc.data() will be undefined in this case
                 console.log("No such document!");
             }
         }).catch((error) => {

@@ -1,4 +1,5 @@
-// Admin dashboard JavaScript file
+import { db } from './firebase-config.js';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', function() {
     const createServiceBtn = document.getElementById('create-service-btn');
@@ -7,8 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const serviceNameInput = document.getElementById('service-name');
     const serviceDescriptionInput = document.getElementById('service-description');
     let selectedServiceId = null;
-
-    const db = firebase.firestore();
 
     // Function to render services
     const renderServices = (services) => {
@@ -46,69 +45,47 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Fetch and render all services
-    const fetchServices = () => {
-        db.collection('services').get()
-            .then(querySnapshot => {
-                const services = [];
-                querySnapshot.forEach(doc => {
-                    services.push({ id: doc.id, ...doc.data() });
-                });
-                renderServices(services);
-            })
-            .catch(error => {
-                console.error("Error fetching services: ", error);
-            });
+    const fetchServices = async () => {
+        const querySnapshot = await getDocs(collection(db, 'services'));
+        const services = [];
+        querySnapshot.forEach(doc => {
+            services.push({ id: doc.id, ...doc.data() });
+        });
+        renderServices(services);
     };
 
     // Initial fetch
     fetchServices();
 
     // Create or Update a service
-    createServiceBtn.addEventListener('click', () => {
+    createServiceBtn.addEventListener('click', async () => {
         const serviceName = serviceNameInput.value;
         const serviceDescription = serviceDescriptionInput.value;
 
         if (selectedServiceId) {
             // Update existing service
-            db.collection('services').doc(selectedServiceId).update({
+            await updateDoc(doc(db, 'services', selectedServiceId), {
                 name: serviceName,
                 description: serviceDescription
-            })
-            .then(() => {
-                console.log("Service updated successfully!");
-                fetchServices();
-                resetForm();
-            })
-            .catch(error => {
-                console.error("Error updating service: ", error);
             });
+            console.log("Service updated successfully!");
         } else {
             // Create new service
-            db.collection('services').add({
+            await addDoc(collection(db, 'services'), {
                 name: serviceName,
                 description: serviceDescription
-            })
-            .then(() => {
-                console.log("Service created successfully!");
-                fetchServices();
-                resetForm();
-            })
-            .catch(error => {
-                console.error("Error creating service: ", error);
             });
+            console.log("Service created successfully!");
         }
+        fetchServices();
+        resetForm();
     });
 
     // Delete a service
-    const deleteService = (serviceId) => {
-        db.collection('services').doc(serviceId).delete()
-            .then(() => {
-                console.log("Service deleted successfully!");
-                fetchServices();
-            })
-            .catch(error => {
-                console.error("Error deleting service: ", error);
-            });
+    const deleteService = async (serviceId) => {
+        await deleteDoc(doc(db, 'services', serviceId));
+        console.log("Service deleted successfully!");
+        fetchServices();
     };
 
     // Function to render applications
@@ -117,10 +94,10 @@ document.addEventListener('DOMContentLoaded', function() {
         applications.forEach(application => {
             const applicationElement = document.createElement('div');
             // Fetch service and user details for each application
-            db.collection('services').doc(application.serviceId).get().then(serviceDoc => {
-                if (serviceDoc.exists) {
-                    db.collection('users').doc(application.userId).get().then(userDoc => {
-                        if (userDoc.exists) {
+            getDoc(doc(db, 'services', application.serviceId)).then(serviceDoc => {
+                if (serviceDoc.exists()) {
+                    getDoc(doc(db, 'users', application.userId)).then(userDoc => {
+                        if (userDoc.exists()) {
                             applicationElement.innerHTML = `
                                 <h3>${serviceDoc.data().name}</h3>
                                 <p>Applied by: ${userDoc.data().email}</p>
@@ -141,44 +118,34 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add event listeners to status select
         const statusSelects = document.querySelectorAll('.status-select');
         statusSelects.forEach(select => {
-            select.addEventListener('change', (e) => {
+            select.addEventListener('change', async (e) => {
                 const applicationId = e.target.dataset.id;
                 const newStatus = e.target.value;
-                updateApplicationStatus(applicationId, newStatus);
+                await updateApplicationStatus(applicationId, newStatus);
             });
         });
     };
 
     // Fetch and render all applications
-    const fetchApplications = () => {
-        db.collection('applications').get()
-            .then(querySnapshot => {
-                const applications = [];
-                querySnapshot.forEach(doc => {
-                    applications.push({ id: doc.id, ...doc.data() });
-                });
-                renderApplications(applications);
-            })
-            .catch(error => {
-                console.error("Error fetching applications: ", error);
-            });
+    const fetchApplications = async () => {
+        const querySnapshot = await getDocs(collection(db, 'applications'));
+        const applications = [];
+        querySnapshot.forEach(doc => {
+            applications.push({ id: doc.id, ...doc.data() });
+        });
+        renderApplications(applications);
     };
 
     // Initial fetch
     fetchApplications();
 
     // Update application status
-    const updateApplicationStatus = (applicationId, newStatus) => {
-        db.collection('applications').doc(applicationId).update({
+    const updateApplicationStatus = async (applicationId, newStatus) => {
+        await updateDoc(doc(db, 'applications', applicationId), {
             status: newStatus
-        })
-        .then(() => {
-            console.log("Application status updated successfully!");
-            fetchApplications();
-        })
-        .catch(error => {
-            console.error("Error updating application status: ", error);
         });
+        console.log("Application status updated successfully!");
+        fetchApplications();
     };
 
     // Reset the create/update form

@@ -1,3 +1,4 @@
+
 // Authentication JavaScript file
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -33,9 +34,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then((userCredential) => {
                     // Signed in
                     var user = userCredential.user;
-                    console.log('User registered:', user);
-                    // Redirect to the user dashboard
-                    window.location.href = 'user.html';
+                    // Add user to firestore
+                    const db = firebase.firestore();
+                    db.collection('users').doc(user.uid).set({
+                        email: user.email,
+                        role: 'user'
+                    })
+                    .then(() => {
+                        console.log("User added to firestore");
+                        // Redirect to the user dashboard
+                        window.location.href = 'user.html';
+                    })
+                    .catch((error) => {
+                        console.error("Error adding user to firestore: ", error);
+                    });
                 })
                 .catch((error) => {
                     var errorCode = error.code;
@@ -46,8 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            firebase.auth().signOut().then(() => {
+        logoutBtn.addEventListener('click',.then(() => {
                 // Sign-out successful.
                 console.log('User logged out');
                 window.location.href = 'index.html';
@@ -58,3 +69,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
